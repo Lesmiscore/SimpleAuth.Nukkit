@@ -15,6 +15,7 @@ public class YamlDataProvider implements DataProvider {
 	public YamlDataProvider(SimpleAuth plugin) {
 		if (!new File(plugin.getDataFolder(), "players").exists())
 			new File(plugin.getDataFolder(), "players").mkdirs();
+		this.plugin = plugin;
 	}
 
 	@Override
@@ -62,10 +63,9 @@ public class YamlDataProvider implements DataProvider {
 	@Override
 	public void savePlayer(IPlayer player, Map<String, Object> config) {
 		String name = player.getName().toLowerCase().trim();
-		Config data = new Config(
-				new File(new File(new File(plugin.getDataFolder(), "players"), String.valueOf(name.charAt(0))),
-						name + ".yml"),
-				Config.YAML);
+		File dir = new File(new File(plugin.getDataFolder(), "players"), String.valueOf(name.charAt(0)));
+		dir.mkdirs();
+		Config data = new Config(new File(dir, name + ".yml"), Config.YAML);
 		data.setAll(new LinkedHashMap<>(config));
 		data.save();
 	}

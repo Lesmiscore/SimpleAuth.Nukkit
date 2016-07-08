@@ -1,6 +1,9 @@
 package com.nao20010128nao;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -31,12 +34,12 @@ import cn.nukkit.utils.TextFormat;
 import gnu.crypto.hash.Whirlpool;
 
 public class SimpleAuth extends PluginBase implements Listener {
-	protected Map<String, PermissionAttachment> needAuth;
+	protected Map<String, PermissionAttachment> needAuth = new HashMap<>();
 	protected EventListener listener;
 	protected DataProvider provider;
 	protected int blockPlayers = 6;
-	protected Map<String, Integer> blockSessions;
-	protected Map<String, Object> messages;
+	protected Map<String, Integer> blockSessions = new HashMap<>();
+	protected Map<String, Object> messages = new HashMap<>();
 	protected ShowMessageTask messageTask = null;
 
 	public boolean isPlayerAuthenticated(Player player) {
@@ -212,10 +215,22 @@ public class SimpleAuth extends PluginBase implements Listener {
 
 	@Override
 	public void onEnable() {
+		try {
+			Util.injectModules(this);
+		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException | IOException e) {
+			// TODO 自動生成された catch ブロック
+			e.printStackTrace();
+			getLogger().error("Failed to inject modules!");
+			getServer().getPluginManager().disablePlugin(this);
+			return;
+		}
+		//////
+		getDataFolder().mkdirs();
 		saveDefaultConfig();
 		reloadConfig();
 		saveResource("messages.yml", false);
-		Map<String, Object> messages = new Config(new File(getDataFolder(), "messages.yml")).getAll();
+		Map<String, Object> messages = new Config(new File(getDataFolder(), "messages.yml"), Config.YAML).getAll();
 		this.messages = parseMessages(messages);
 		Command registerCommand = (Command) getCommand("register");
 		registerCommand.setUsage(getMessage("register.usage"));
@@ -237,6 +252,7 @@ public class SimpleAuth extends PluginBase implements Listener {
 				this.provider = new YamlDataProvider(this);
 				break;
 			case "sqlite3":
+			case "mysql":
 				getLogger().error("Provider \"" + provider + "\" isn't supported right now!");
 				getLogger().error("Please convert the provider format to YAML!");
 			case "none":
@@ -338,5 +354,11 @@ public class SimpleAuth extends PluginBase implements Listener {
 		for (byte b : a)
 			sb.append(Character.forDigit(b >> 4 & 0xF, 16)).append(Character.forDigit(b & 0xF, 16));
 		return sb.toString();
+	}
+
+	// fix for unexcepted code
+	@Override
+	public InputStream getResource(String filename) {
+		return this.getClass().getClassLoader().getResourceAsStream("resources/" + filename);
 	}
 }
