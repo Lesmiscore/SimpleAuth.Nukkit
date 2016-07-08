@@ -8,7 +8,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.nao20010128nao.event.PlayerAuthenticateEvent;
@@ -34,7 +36,7 @@ import cn.nukkit.utils.TextFormat;
 import gnu.crypto.hash.Whirlpool;
 
 public class SimpleAuth extends PluginBase implements Listener {
-	protected Map<String, PermissionAttachment> needAuth = new HashMap<>();
+	protected Set<String> needAuth = new HashSet<>();
 	protected EventListener listener;
 	protected DataProvider provider;
 	protected int blockPlayers = 6;
@@ -43,7 +45,7 @@ public class SimpleAuth extends PluginBase implements Listener {
 	protected ShowMessageTask messageTask = null;
 
 	public boolean isPlayerAuthenticated(Player player) {
-		return !needAuth.containsKey(player.getName());
+		return !needAuth.contains(player.getName());
 	}
 
 	public boolean isPlayerRegistered(IPlayer player) {
@@ -57,11 +59,7 @@ public class SimpleAuth extends PluginBase implements Listener {
 		getServer().getPluginManager().callEvent(ev = new PlayerAuthenticateEvent(this, player));
 		if (ev.isCancelled())
 			return false;
-		if (needAuth.containsKey(player.getName())) {
-			PermissionAttachment attachment = needAuth.get(player.getName());
-			player.removeAttachment(attachment);
-			needAuth.remove(player.getName());
-		}
+
 		provider.updatePlayer(player, player.getUniqueId().toString(), System.currentTimeMillis());
 		player.sendMessage(TextFormat.GREEN + getMessage("login.success"));
 		getMessageTask().removePlayer(player);
@@ -76,9 +74,7 @@ public class SimpleAuth extends PluginBase implements Listener {
 		getServer().getPluginManager().callEvent(ev = new PlayerDeauthenticateEvent(this, player));
 		if (ev.isCancelled())
 			return false;
-		PermissionAttachment attachment = player.addAttachment(this);
-		removePermissions(attachment);
-		needAuth.put(player.getName(), attachment);
+
 		sendAuthenticateMessage(player);
 		getMessageTask().addPlayer(player);
 		return true;
@@ -132,7 +128,7 @@ public class SimpleAuth extends PluginBase implements Listener {
 	}
 
 	public void closePlayer(Player player) {
-		needAuth.remove(player.toString());
+		needAuth.remove(player.getName());
 		messageTask.removePlayer(player);
 	}
 
@@ -155,11 +151,6 @@ public class SimpleAuth extends PluginBase implements Listener {
 					Map<String, Object> data;
 					if (!isPlayerRegistered((IPlayer) sender) | (data = provider.getPlayer((IPlayer) sender)) == null) {
 						sender.sendMessage(TextFormat.RED + getMessage("login.error.registered"));
-
-						return true;
-					}
-					if (args.length != 1) {
-						sender.sendMessage(TextFormat.RED + "Usage: " + command.getUsage());
 
 						return true;
 					}
@@ -316,7 +307,7 @@ public class SimpleAuth extends PluginBase implements Listener {
 
 	private String hash(String salt, String password) {
 		try {
-			MessageDigest sha512 = MessageDigest.getInstance("sha512");
+			MessageDigest sha512 = MessageDigest.getInstance("SHA-512");
 			sha512.update(password.getBytes());
 			sha512.update(salt.getBytes());
 			//////

@@ -1,10 +1,14 @@
 package com.nao20010128nao;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+
+import cn.nukkit.utils.Utils;
 
 public class Util {
 	private static final Class[] parameters = new Class[] { URL.class };
@@ -22,11 +26,22 @@ public class Util {
 		method.invoke(sysloader, new Object[] { u });
 	}
 
+	public static void loadJar(SimpleAuth plugin, URLClassLoader pluginClassLoader, String name)
+			throws IOException, NoSuchMethodException, SecurityException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException {
+		File f = new File(plugin.getDataFolder(), name);
+		f.getParentFile().mkdirs();
+		InputStream is = pluginClassLoader.getResourceAsStream(name);
+		Utils.writeFile(f, is);
+		is.close();
+		addURL(pluginClassLoader, f.toURI().toURL());
+	}
+
 	public static void injectModules(SimpleAuth plugin) throws IOException, NoSuchMethodException, SecurityException,
 			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		URLClassLoader pluginClassLoader = (URLClassLoader) plugin.getClass().getClassLoader();
-		addURL(pluginClassLoader, pluginClassLoader.getResource("gnu-crypto/gnu-crypto.jar"));
-		addURL(pluginClassLoader, pluginClassLoader.getResource("gnu-crypto/javax-crypto.jar"));
-		addURL(pluginClassLoader, pluginClassLoader.getResource("gnu-crypto/javax-security.jar"));
+		loadJar(plugin, pluginClassLoader, "gnu-crypto/gnu-crypto.jar");
+		loadJar(plugin, pluginClassLoader, "gnu-crypto/javax-crypto.jar");
+		loadJar(plugin, pluginClassLoader, "gnu-crypto/javax-security.jar");
 	}
 }

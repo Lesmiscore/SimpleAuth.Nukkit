@@ -53,6 +53,7 @@ public class EventListener implements Listener {
 					player.kick("already logged in");
 					return;
 				}
+		plugin.needAuth.add(player.getName());
 	}
 
 	@EventHandler
