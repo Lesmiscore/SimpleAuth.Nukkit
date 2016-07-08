@@ -6,9 +6,9 @@ import com.nao20010128nao.SimpleAuth;
 
 import cn.nukkit.IPlayer;
 
-public class DummyProvider implements DataProvider {
+public class DummyDataProvider implements DataProvider {
 
-	public DummyProvider(SimpleAuth p) {
+	public DummyDataProvider(SimpleAuth p) {
 		// TODO 自動生成されたコンストラクター・スタブ
 	}
 

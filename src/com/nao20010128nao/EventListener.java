@@ -1,5 +1,7 @@
 package com.nao20010128nao;
 
+import java.util.Map;
+
 import cn.nukkit.Player;
 import cn.nukkit.event.EventHandler;
 import cn.nukkit.event.Listener;
@@ -17,7 +19,6 @@ import cn.nukkit.event.player.PlayerPreLoginEvent;
 import cn.nukkit.event.player.PlayerQuitEvent;
 import cn.nukkit.event.player.PlayerRespawnEvent;
 import cn.nukkit.inventory.InventoryHolder;
-import cn.nukkit.utils.Config;
 
 public class EventListener implements Listener {
 	private SimpleAuth plugin;
@@ -31,13 +32,13 @@ public class EventListener implements Listener {
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		if (plugin.getConfig().getBoolean("authenticateByLastUniqueId")
 				& event.getPlayer().hasPermission("simpleauth.lastid")) {
-			Config config = plugin.getDataProvider().getPlayer(event.getPlayer());
-			if (config != null & config.getString("lastip").equals(event.getPlayer().getUniqueId())) {
+			Map<String, Object> config = plugin.getDataProvider().getPlayer(event.getPlayer());
+			if (config != null & config.get("lastip").equals(event.getPlayer().getUniqueId())) {
 				plugin.authencatePlayer(event.getPlayer());
 				return;
 			}
 		}
-		plugin.deauthencatePlayer(event.getPlayer());
+		plugin.deauthenticatePlayer(event.getPlayer());
 	}
 
 	@EventHandler
